@@ -456,6 +456,20 @@ bool Mesh::basicValidity()
 
     cerr << "--|> basicValidity:" << endl;
 
+
+
+    // Checking edge indices within bounds of the vertex list
+    uint max_vert_index = verts.size();
+    for(uint i = 0; i < tris.size(); i++){
+        std::vector<int> tri_verts(std::begin(tris[i].v), std::end(tris[i].v));
+
+        for(uint j = 0; j < tri_verts.size(); j++){
+            if(tri_verts[j] >= max_vert_index){
+                return false;
+            }
+        }
+    }
+
     // Checking Eulers characteristic
     // TODO: There is no edges vector. How do I get the edges?
     // TODO: How do I get the Genus 'G' of the mesh?
@@ -470,6 +484,7 @@ bool Mesh::basicValidity()
     // }
 
     // Checking for no dangling vertices
+    // Every vertex should be referenced by at least one triangle
     std::vector<bool> verts_used(verts.size(), false);
     for(uint i = 0; i < tris.size(); i++){
         std::vector<int> tri_verts(std::begin(tris[i].v), std::end(tris[i].v));
