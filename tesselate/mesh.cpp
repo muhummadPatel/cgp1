@@ -18,6 +18,8 @@
 #include <glm/gtx/intersect.hpp>
 #include <unordered_map>
 
+#include <algorithm>
+
 using namespace std;
 using namespace cgp;
 
@@ -440,9 +442,50 @@ bool Mesh::writeSTL(string filename)
     return true;
 }
 
+/**
+ * DELLEEEEEETTTTEEE MEEE
+ * Basic mesh validity tests - report euler's characteristic, no dangling vertices, edge indices within bounds of the vertex list
+ * @retval true if basic validity tests are passed,
+ * @retval false otherwise
+ * @todo basicValidity requires completing for CGP Prac1
+ */
 bool Mesh::basicValidity()
 {
     // stub, needs completing
+    //QMessageBox::information(NULL, "", "Hi!");
+
+    cerr << "--|> basicValidity:" << endl;
+
+    // Checking Eulers characteristic
+    // TODO: There is no edges vector. How do I get the edges?
+    // TODO: How do I get the Genus 'G' of the mesh?
+    // uint V = verts.size();
+    // uint E = edges.size();
+    // uint F = tris.size();
+    // int eulers_char_lhs = V - E + F;
+    // ???--v
+    // int eulers_char_rhs;
+    // if(eulers_char_lhs != eulers_char_rhs){
+    //     return false;
+    // }
+
+    // Checking for no dangling vertices
+    std::vector<bool> verts_used(verts.size(), false);
+    for(uint i = 0; i < tris.size(); i++){
+        std::vector<int> tri_verts(std::begin(tris[i].v), std::end(tris[i].v));
+        // cerr << tri_verts[0] << ", " << tri_verts[1] << ", " << tri_verts[2] << endl;
+
+        for(uint j = 0; j < tri_verts.size(); j++){
+            verts_used[tri_verts[j]] = true;
+        }
+    }
+
+    int dangling_verts = std::count(verts_used.begin(), verts_used.end(), false);
+    cerr << "Dangling: " << dangling_verts << endl;
+    if(dangling_verts > 0){
+        return false;
+    }
+
     return true;
 }
 
