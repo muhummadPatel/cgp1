@@ -393,6 +393,11 @@ bool Mesh::readSTL(string filename)
             cerr << "loaded file has basic validity" << endl;
         else
             cerr << "loaded file does not pass basic validity" << endl;
+
+        if(manifoldValidity())
+            cerr << "loaded file has manifold validity" << endl;
+        else
+            cerr << "loaded file does not pass manifold validity" << endl;
     }
     else
     {
@@ -569,8 +574,41 @@ bool Mesh::basicValidity()
     return true;
 }
 
+
+void edgePrintHelper(std::pair<int, int>& index, std::vector<Edge>& evec){
+    cerr << "<" << index.first << ", " << index.second << "> : " << endl;
+    for(auto e: evec){
+        cerr << e << endl;
+    }
+    cerr << endl;
+}
+
+/**
+ * TODO: DELLEEEEEETTTTEEE MEEE
+ * Check that the mesh is a closed two-manifold - every edge has two incident triangles, every vertex has
+ *                                                a closed ring of triangles around it
+ * This test does not include self-intersection of individual triangles as this is outside the scope.
+ * @retval true if the mesh is two-manifold,
+ * @retval false otherwise
+ * @todo manifoldValidity requires completing for CGP Prac1
+ */
 bool Mesh::manifoldValidity()
 {
     // stub, needs completing
+
+    //looping over the edges
+    for(auto it = edges.begin(); it != edges.end(); it++){
+        std::pair<int, int> index = it->first;
+        std::vector<Edge> evec = it->second;
+
+        //edgePrintHelper(index, evec);
+
+        //check that every edge has 2 triangles associated with it (Closed mesh)
+        if(evec.size() != 2){
+            cerr << "There are some edges with incident_triangles != 2." << endl;
+            return false;
+        }
+    }
+
     return true;
 }
