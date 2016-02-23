@@ -16,9 +16,11 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/rotate_vector.hpp>
 #include <glm/gtx/intersect.hpp>
-#include <unordered_map>
 
+#include <unordered_map>
 #include <algorithm>
+#include <utility> //std::pair
+#include <boost/functional/hash.hpp>
 
 using namespace std;
 using namespace cgp;
@@ -227,6 +229,8 @@ void Mesh::clear()
     for(int i = 0; i < (int) boundspheres.size(); i++)
         boundspheres[i].ind.clear();
     boundspheres.clear();
+
+    edges.clear();
 }
 
 bool Mesh::genGeometry(View * view, ShapeDrawData &sdd)
@@ -449,57 +453,118 @@ bool Mesh::writeSTL(string filename)
  * @retval false otherwise
  * @todo basicValidity requires completing for CGP Prac1
  */
+// bool Mesh::basicValidity()
+// {
+//     // stub, needs completing
+//     //QMessageBox::information(NULL, "", "Hi!");
+//
+//     cerr << "--|> basicValidity:" << endl;
+//
+//
+//
+//     // Checking edge indices within bounds of the vertex list
+//     uint max_vert_index = verts.size();
+//     for(uint i = 0; i < tris.size(); i++){
+//         std::vector<int> tri_verts(std::begin(tris[i].v), std::end(tris[i].v));
+//
+//         for(uint j = 0; j < tri_verts.size(); j++){
+//             if(tri_verts[j] >= max_vert_index){
+//                 return false;
+//             }
+//         }
+//     }
+//
+//     // Checking Eulers characteristic
+//     // TODO: There is no edges vector. How do I get the edges?
+//     // TODO: How do I get the Genus 'G' of the mesh?
+//     // uint V = verts.size();
+//     // uint E = edges.size();
+//     // uint F = tris.size();
+//     // int eulers_char_lhs = V - E + F;
+//     // ???--v
+//     // int eulers_char_rhs;
+//     // if(eulers_char_lhs != eulers_char_rhs){
+//     //     return false;
+//     // }
+//
+//     // Checking for no dangling vertices
+//     // Every vertex should be referenced by at least one triangle
+//     std::vector<bool> verts_used(verts.size(), false);
+//     for(uint i = 0; i < tris.size(); i++){
+//         std::vector<int> tri_verts(std::begin(tris[i].v), std::end(tris[i].v));
+//         // cerr << tri_verts[0] << ", " << tri_verts[1] << ", " << tri_verts[2] << endl;
+//
+//         for(uint j = 0; j < tri_verts.size(); j++){
+//             verts_used[tri_verts[j]] = true;
+//         }
+//     }
+//
+//     int dangling_verts = std::count(verts_used.begin(), verts_used.end(), false);
+//     cerr << "Dangling: " << dangling_verts << endl;
+//     if(dangling_verts > 0){
+//         return false;
+//     }
+//
+//     return true;
+// }
+
+void Mesh::insertEdge(Edge& edge){
+    std::vector<int> edge_verts = {std::begin(edge.v), std::end(edge.v)};
+    std::sort(edge_verts.begin(), edge_verts.end());
+
+    std::pair<int, int> index(edge_verts[0], edge_verts[1]);
+
+    edges[index].push_back(edge);
+}
+
 bool Mesh::basicValidity()
 {
-    // stub, needs completing
-    //QMessageBox::information(NULL, "", "Hi!");
+    cerr << "basicValidity:" << endl;
 
-    cerr << "--|> basicValidity:" << endl;
-
-
-
-    // Checking edge indices within bounds of the vertex list
-    uint max_vert_index = verts.size();
-    for(uint i = 0; i < tris.size(); i++){
-        std::vector<int> tri_verts(std::begin(tris[i].v), std::end(tris[i].v));
-
-        for(uint j = 0; j < tri_verts.size(); j++){
-            if(tri_verts[j] >= max_vert_index){
+    for(int i = 0; i < tris.size(); i++){
+        std::vector<int> tri_verts = {std::begin(tris[i].v), std::end(tris[i].v)};
+        for(int v = 0; v < tri_verts.size(); v++){
+            if(v >= verts.size()){
+                cerr << "Reference to out-of-bounds vertex found." << endl;
                 return false;
             }
         }
+
+        Edge e1 = {{tri_verts[0], tri_verts[1]}, tris[i]};
+        Edge e2 = {{tri_verts[1], tri_verts[2]}, tris[i]};
+        Edge e3 = {{tri_verts[2], tri_verts[0]}, tris[i]};
+
+        insertEdge(e1);
+        insertEdge(e2);
+        insertEdge(e3);
     }
+    cerr << "edges.size() = " << edges.size() << endl;
 
-    // Checking Eulers characteristic
-    // TODO: There is no edges vector. How do I get the edges?
-    // TODO: How do I get the Genus 'G' of the mesh?
-    // uint V = verts.size();
-    // uint E = edges.size();
-    // uint F = tris.size();
-    // int eulers_char_lhs = V - E + F;
-    // ???--v
-    // int eulers_char_rhs;
-    // if(eulers_char_lhs != eulers_char_rhs){
-    //     return false;
-    // }
+    uint V = verts.size();
+    uint E = edges.size();
+    uint F = tris.size();
+    int eulers_char = V - E + F;
+    cerr << "V = " << V << endl;
+    cerr << "E = " << E << endl;
+    cerr << "F = " << F << endl;
+    cerr << "Eulers characteristic: V - E + F = " << eulers_char << endl;
+    cerr << "Should be eq to 2 - 2G ____________T" << endl;
 
-    // Checking for no dangling vertices
-    // Every vertex should be referenced by at least one triangle
+    //TODO: never actually get dangling verts?
     std::vector<bool> verts_used(verts.size(), false);
     for(uint i = 0; i < tris.size(); i++){
         std::vector<int> tri_verts(std::begin(tris[i].v), std::end(tris[i].v));
-        // cerr << tri_verts[0] << ", " << tri_verts[1] << ", " << tri_verts[2] << endl;
 
         for(uint j = 0; j < tri_verts.size(); j++){
             verts_used[tri_verts[j]] = true;
         }
     }
-
     int dangling_verts = std::count(verts_used.begin(), verts_used.end(), false);
-    cerr << "Dangling: " << dangling_verts << endl;
+    cerr << "Dangling vertices: " << dangling_verts << endl;
     if(dangling_verts > 0){
         return false;
     }
+
 
     return true;
 }

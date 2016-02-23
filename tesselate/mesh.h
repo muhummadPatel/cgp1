@@ -12,6 +12,9 @@
 #include <iostream>
 #include "renderer.h"
 
+#include <utility> //std::pair
+#include <boost/functional/hash.hpp>
+
 using namespace std;
 
 const int sphperdim = 20;
@@ -31,6 +34,7 @@ struct Triangle
 struct Edge
 {
     int v[2];   ///< indices into the vertex list for edge endpoints
+    Triangle adjacent_tri;
 };
 
 /**
@@ -46,7 +50,7 @@ public:
     /**
      * Test whether a point falls inside the sphere
      * @param pnt   point to test for containment
-     * @retval true if the point falls within the sphere, 
+     * @retval true if the point falls within the sphere,
      * @retval false otherwise
      */
     bool pointInSphere(cgp::Point pnt);
@@ -66,6 +70,8 @@ private:
     cgp::Vector trx;                 ///< translation
     float xrot, yrot, zrot;     ///< rotation angles about x, y, and z axes
     std::vector<Sphere> boundspheres; ///< bounding sphere accel structure
+
+    std::unordered_map<std::pair<int, int>, std::vector<Edge>, boost::hash<std::pair<int, int>>> edges;
 
     /**
      * Search list of vertices to find matching point
@@ -108,6 +114,8 @@ private:
      * @param tfm   composited transformation matrix
      */
     void buildTransform(glm::mat4x4 &tfm);
+
+    void insertEdge(Edge& edge);
 
 public:
 
