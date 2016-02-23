@@ -28,6 +28,12 @@ struct Triangle
     cgp::Vector n;   ///< outward facing unit normal to the triangle
 };
 
+inline std::ostream & operator<<(std::ostream & Str, Triangle const & v) {
+  // print something from v to str, e.g: Str << v.getX();
+  Str << "Triangle: <" << v.v[0] << ", " << v.v[1] << ", " << v.v[2] << ">";
+  return Str;
+}
+
 /**
  * An edge in 3D space, with 2 indices into a vertex list. The order of the vertices has no special significance.
  */
@@ -36,6 +42,12 @@ struct Edge
     int v[2];   ///< indices into the vertex list for edge endpoints
     Triangle adjacent_tri;
 };
+
+inline std::ostream & operator<<(std::ostream & Str, Edge const & v) {
+  // print something from v to str, e.g: Str << v.getX();
+  Str << "Edge: [<" << v.v[0] << ", " << v.v[1] << ">, " << v.adjacent_tri << "]";
+  return Str;
+}
 
 /**
  * A sphere in 3D space, consisting of a center and radius. Used for bounding sphere hierarchy acceleration.
