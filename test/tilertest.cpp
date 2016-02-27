@@ -42,7 +42,7 @@ static po::variables_map processOptions(int argc, const char **argv)
 
     po::options_description test("Test options");
     test.add_options()
-        ("test", po::value<std::string>()->default_value("build"), "Choose test")
+        ("test", po::value<std::string>()->default_value("All tests"), "Choose test")
         ("list",                                      "List all tests")
         ("verbose,v",                                 "Show result of each test as it runs");
     desc.add(test);
