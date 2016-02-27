@@ -598,7 +598,8 @@ bool Mesh::areOppositeEdges(Edge& edge1, Edge& edge2){
  */
 bool Mesh::manifoldValidity()
 {
-    // stub, needs completing
+    //To keep track of which edges are adjacent to each vertex
+    std::vector<std::vector<std::pair<int, int>>> edges_at_vertex(verts.size());
 
     //looping over the edges
     for(auto it = edges.begin(); it != edges.end(); it++){
@@ -613,13 +614,24 @@ bool Mesh::manifoldValidity()
             return false;
         }
 
-        // check orientation/consistent winding. Every pair of edges runs opposite to each other.
+        //check orientation/consistent winding. Every pair of edges runs opposite to each other.
         if(!areOppositeEdges(evec[0], evec[1])){
             cerr << "Orientation error. Check the normals of your model." << endl;
         }
+
+        //put this edge into the edges_at_vertex vector
+        edges_at_vertex[index.first].push_back(index);
+        edges_at_vertex[index.second].push_back(index);
     }
 
-
+    // for(int i = 0; i < edges_at_vertex.size(); i++){
+    //     cerr << i << ": " << endl;
+    //
+    //     for(int j = 0; j < edges_at_vertex[i].size(); j++){
+    //         cerr << "\t[ " << edges_at_vertex[i][j].first << ", " << edges_at_vertex[i][j].second << " ]" << endl;
+    //     }
+    //     cerr << endl;
+    // }
 
     return true;
 }
