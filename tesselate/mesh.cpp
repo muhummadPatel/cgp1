@@ -575,7 +575,7 @@ bool Mesh::basicValidity()
 }
 
 
-void edgePrintHelper(std::pair<int, int>& index, std::vector<Edge>& evec){
+void Mesh::edgePrintHelper(std::pair<int, int>& index, std::vector<Edge>& evec){
     cerr << "<" << index.first << ", " << index.second << "> : " << endl;
     for(auto e: evec){
         cerr << e << endl;
