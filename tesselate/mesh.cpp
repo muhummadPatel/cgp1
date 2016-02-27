@@ -451,68 +451,6 @@ bool Mesh::writeSTL(string filename)
     return true;
 }
 
-/**
- * DELLEEEEEETTTTEEE MEEE
- * Basic mesh validity tests - report euler's characteristic, no dangling vertices, edge indices within bounds of the vertex list
- * @retval true if basic validity tests are passed,
- * @retval false otherwise
- * @todo basicValidity requires completing for CGP Prac1
- */
-// bool Mesh::basicValidity()
-// {
-//     // stub, needs completing
-//     //QMessageBox::information(NULL, "", "Hi!");
-//
-//     cerr << "--|> basicValidity:" << endl;
-//
-//
-//
-//     // Checking edge indices within bounds of the vertex list
-//     uint max_vert_index = verts.size();
-//     for(uint i = 0; i < tris.size(); i++){
-//         std::vector<int> tri_verts(std::begin(tris[i].v), std::end(tris[i].v));
-//
-//         for(uint j = 0; j < tri_verts.size(); j++){
-//             if(tri_verts[j] >= max_vert_index){
-//                 return false;
-//             }
-//         }
-//     }
-//
-//     // Checking Eulers characteristic
-//     // TODO: There is no edges vector. How do I get the edges?
-//     // TODO: How do I get the Genus 'G' of the mesh?
-//     // uint V = verts.size();
-//     // uint E = edges.size();
-//     // uint F = tris.size();
-//     // int eulers_char_lhs = V - E + F;
-//     // ???--v
-//     // int eulers_char_rhs;
-//     // if(eulers_char_lhs != eulers_char_rhs){
-//     //     return false;
-//     // }
-//
-//     // Checking for no dangling vertices
-//     // Every vertex should be referenced by at least one triangle
-//     std::vector<bool> verts_used(verts.size(), false);
-//     for(uint i = 0; i < tris.size(); i++){
-//         std::vector<int> tri_verts(std::begin(tris[i].v), std::end(tris[i].v));
-//         // cerr << tri_verts[0] << ", " << tri_verts[1] << ", " << tri_verts[2] << endl;
-//
-//         for(uint j = 0; j < tri_verts.size(); j++){
-//             verts_used[tri_verts[j]] = true;
-//         }
-//     }
-//
-//     int dangling_verts = std::count(verts_used.begin(), verts_used.end(), false);
-//     cerr << "Dangling: " << dangling_verts << endl;
-//     if(dangling_verts > 0){
-//         return false;
-//     }
-//
-//     return true;
-// }
-
 void Mesh::insertEdge(Edge& edge){
     std::vector<int> edge_verts = {std::begin(edge.v), std::end(edge.v)};
     std::sort(edge_verts.begin(), edge_verts.end());
@@ -570,7 +508,6 @@ bool Mesh::basicValidity()
         return false;
     }
 
-
     return true;
 }
 
@@ -596,7 +533,6 @@ std::pair<int, int> Mesh::getNextEdge(std::pair<int, int> curr, std::vector<std:
 
     visited.push_back(tri);
 
-
     std::vector<std::pair<int, int>> tri_edges;
     tri_edges.push_back(std::make_pair(min(tri.v[0], tri.v[1]), max(tri.v[0], tri.v[1])));
     tri_edges.push_back(std::make_pair(min(tri.v[1], tri.v[2]), max(tri.v[1], tri.v[2])));
@@ -605,32 +541,15 @@ std::pair<int, int> Mesh::getNextEdge(std::pair<int, int> curr, std::vector<std:
     //get rid of the current edge
     tri_edges.erase(std::remove(tri_edges.begin(), tri_edges.end(), curr), tri_edges.end());
 
-    cerr << "\ncurr [ " << curr.first << ", " << curr.second << " ]" << endl;
-    cerr << "tri_edges:" << endl;
-    for(int i = 0; i < tri_edges.size(); i++){
-        cerr << "\t[ " << tri_edges[i].first << ", " << tri_edges[i].second << " ]" << endl;
-    }
-
     if(std::find(adjacent_edges.begin(), adjacent_edges.end(), tri_edges[0]) != adjacent_edges.end()){
-        cerr << "f0" << endl;
         return tri_edges[0];
     }else if(std::find(adjacent_edges.begin(), adjacent_edges.end(), tri_edges[1]) != adjacent_edges.end()){
-        cerr << "f1" << endl;
         return tri_edges[1];
     }
 
     return std::make_pair(-1, -1);
 }
 
-/**
- * TODO: DELLEEEEEETTTTEEE MEEE
- * Check that the mesh is a closed two-manifold - every edge has two incident triangles, every vertex has
- *                                                a closed ring of triangles around it
- * This test does not include self-intersection of individual triangles as this is outside the scope.
- * @retval true if the mesh is two-manifold,
- * @retval false otherwise
- * @todo manifoldValidity requires completing for CGP Prac1
- */
 bool Mesh::manifoldValidity()
 {
     //To keep track of which edges are adjacent to each vertex
@@ -640,8 +559,6 @@ bool Mesh::manifoldValidity()
     for(auto it = edges.begin(); it != edges.end(); it++){
         std::pair<int, int> index = it->first;
         std::vector<Edge> evec = it->second;
-
-        //edgePrintHelper(index, evec);
 
         //check that every edge has 2 triangles associated with it (Closed mesh)
         if(evec.size() != 2){
@@ -660,15 +577,6 @@ bool Mesh::manifoldValidity()
         edges_at_vertex[index.second].push_back(index);
     }
 
-    for(int i = 0; i < edges_at_vertex.size(); i++){
-        cerr << i << ": " << endl;
-
-        for(int j = 0; j < edges_at_vertex[i].size(); j++){
-            cerr << "\t[ " << edges_at_vertex[i][j].first << ", " << edges_at_vertex[i][j].second << " ]" << endl;
-        }
-        cerr << endl;
-    }
-
     //for each vertex
     for(int i = 0; i < verts.size(); i++){
         //get the edges adjacent to that vertex
@@ -684,11 +592,9 @@ bool Mesh::manifoldValidity()
                 return false;
             }
 
-
             adjacent_edges.erase(std::remove(adjacent_edges.begin(), adjacent_edges.end(), curr), adjacent_edges.end());
             curr = getNextEdge(curr, adjacent_edges, visited);
         }
-        cerr << "vertex " << i << " done" << endl;
 
         if(curr != start || visited.size() != edges_at_vertex[i].size() ){
             cerr << "Mesh does not obey 2 manifold property" << endl;
