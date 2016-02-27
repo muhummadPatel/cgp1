@@ -583,6 +583,10 @@ void Mesh::edgePrintHelper(std::pair<int, int>& index, std::vector<Edge>& evec){
     cerr << endl;
 }
 
+bool Mesh::areOppositeEdges(Edge& edge1, Edge& edge2){
+    return (edge1.v[0] == edge2.v[1] && edge1.v[1] == edge2.v[0]);
+}
+
 /**
  * TODO: DELLEEEEEETTTTEEE MEEE
  * Check that the mesh is a closed two-manifold - every edge has two incident triangles, every vertex has
@@ -608,7 +612,14 @@ bool Mesh::manifoldValidity()
             cerr << "There are some edges with incident_triangles != 2." << endl;
             return false;
         }
+
+        // check orientation/consistent winding. Every pair of edges runs opposite to each other.
+        if(!areOppositeEdges(evec[0], evec[1])){
+            cerr << "Orientation error. Check the normals of your model." << endl;
+        }
     }
+
+
 
     return true;
 }
