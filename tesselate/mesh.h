@@ -28,6 +28,13 @@ struct Triangle
     cgp::Vector n;   ///< outward facing unit normal to the triangle
 };
 
+inline bool operator==(const Triangle& lhs, const Triangle& rhs)
+{
+    bool vertsEqual = lhs.v[0] == rhs.v[0] && lhs.v[1] == rhs.v[1] &&lhs.v[2] == rhs.v[2];
+    bool normalEqual = true;//lhs.n == rhs.n;
+    return vertsEqual && normalEqual;
+}
+
 inline std::ostream & operator<<(std::ostream & Str, Triangle const & v) {
   // print something from v to str, e.g: Str << v.getX();
   Str << "Triangle: <" << v.v[0] << ", " << v.v[1] << ", " << v.v[2] << ">";
@@ -130,6 +137,7 @@ private:
     void edgePrintHelper(std::pair<int, int>& index, std::vector<Edge>& evec);
     void insertEdge(Edge& edge);
     bool areOppositeEdges(Edge& edge1, Edge& edge2);
+    std::pair<int, int> getNextEdge(std::pair<int, int> curr, std::vector<std::pair<int, int>>& adjacent_edges, std::vector<Triangle>& visited);
 
 public:
 

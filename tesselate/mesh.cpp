@@ -587,6 +587,41 @@ bool Mesh::areOppositeEdges(Edge& edge1, Edge& edge2){
     return (edge1.v[0] == edge2.v[1] && edge1.v[1] == edge2.v[0]);
 }
 
+std::pair<int, int> Mesh::getNextEdge(std::pair<int, int> curr, std::vector<std::pair<int, int>>& adjacent_edges, std::vector<Triangle>& visited){
+    Triangle tri = edges[curr][0].adjacent_tri;
+
+    if(std::find(visited.begin(), visited.end(), tri) != visited.end()){
+        tri = edges[curr][1].adjacent_tri;
+    }
+
+    visited.push_back(tri);
+
+
+    std::vector<std::pair<int, int>> tri_edges;
+    tri_edges.push_back(std::make_pair(min(tri.v[0], tri.v[1]), max(tri.v[0], tri.v[1])));
+    tri_edges.push_back(std::make_pair(min(tri.v[1], tri.v[2]), max(tri.v[1], tri.v[2])));
+    tri_edges.push_back(std::make_pair(min(tri.v[2], tri.v[0]), max(tri.v[2], tri.v[0])));
+
+    //get rid of the current edge
+    tri_edges.erase(std::remove(tri_edges.begin(), tri_edges.end(), curr), tri_edges.end());
+
+    cerr << "\ncurr [ " << curr.first << ", " << curr.second << " ]" << endl;
+    cerr << "tri_edges:" << endl;
+    for(int i = 0; i < tri_edges.size(); i++){
+        cerr << "\t[ " << tri_edges[i].first << ", " << tri_edges[i].second << " ]" << endl;
+    }
+
+    if(std::find(adjacent_edges.begin(), adjacent_edges.end(), tri_edges[0]) != adjacent_edges.end()){
+        cerr << "f0" << endl;
+        return tri_edges[0];
+    }else if(std::find(adjacent_edges.begin(), adjacent_edges.end(), tri_edges[1]) != adjacent_edges.end()){
+        cerr << "f1" << endl;
+        return tri_edges[1];
+    }
+
+    return std::make_pair(-1, -1);
+}
+
 /**
  * TODO: DELLEEEEEETTTTEEE MEEE
  * Check that the mesh is a closed two-manifold - every edge has two incident triangles, every vertex has
@@ -617,6 +652,7 @@ bool Mesh::manifoldValidity()
         //check orientation/consistent winding. Every pair of edges runs opposite to each other.
         if(!areOppositeEdges(evec[0], evec[1])){
             cerr << "Orientation error. Check the normals of your model." << endl;
+            return false;
         }
 
         //put this edge into the edges_at_vertex vector
@@ -624,14 +660,41 @@ bool Mesh::manifoldValidity()
         edges_at_vertex[index.second].push_back(index);
     }
 
-    // for(int i = 0; i < edges_at_vertex.size(); i++){
-    //     cerr << i << ": " << endl;
-    //
-    //     for(int j = 0; j < edges_at_vertex[i].size(); j++){
-    //         cerr << "\t[ " << edges_at_vertex[i][j].first << ", " << edges_at_vertex[i][j].second << " ]" << endl;
-    //     }
-    //     cerr << endl;
-    // }
+    for(int i = 0; i < edges_at_vertex.size(); i++){
+        cerr << i << ": " << endl;
+
+        for(int j = 0; j < edges_at_vertex[i].size(); j++){
+            cerr << "\t[ " << edges_at_vertex[i][j].first << ", " << edges_at_vertex[i][j].second << " ]" << endl;
+        }
+        cerr << endl;
+    }
+
+    //for each vertex
+    for(int i = 0; i < verts.size(); i++){
+        //get the edges adjacent to that vertex
+        std::vector<std::pair<int, int>> adjacent_edges = edges_at_vertex[i];
+
+        std::vector<Triangle> visited; //keep track of the triangles we visited
+
+        std::pair<int, int> start = adjacent_edges[0];
+        std::pair<int, int> curr = getNextEdge(start, adjacent_edges, visited);
+        while(curr != start && !adjacent_edges.empty()){
+            if(curr.first == -1 && curr.second == -1){
+                cerr << "No closed ring. Not a 2 manifold mesh." << endl;
+                return false;
+            }
+
+
+            adjacent_edges.erase(std::remove(adjacent_edges.begin(), adjacent_edges.end(), curr), adjacent_edges.end());
+            curr = getNextEdge(curr, adjacent_edges, visited);
+        }
+        cerr << "vertex " << i << " done" << endl;
+
+        if(curr != start || visited.size() != edges_at_vertex[i].size() ){
+            cerr << "Mesh does not obey 2 manifold property" << endl;
+            return false;
+        }
+    }
 
     return true;
 }
