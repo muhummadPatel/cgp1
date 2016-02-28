@@ -18,6 +18,11 @@ class TestMesh : public CppUnit::TestFixture
     CPPUNIT_TEST(testFailsOpenMesh);
     CPPUNIT_TEST(testFailsBadOrientationMesh);
     CPPUNIT_TEST(testFailsNon2ManifoldMesh);
+    CPPUNIT_TEST(testFailsDanglingVertexMesh);
+    CPPUNIT_TEST(testFailsInvalidVertexMesh);
+    CPPUNIT_TEST(testGenus0Mesh);
+    CPPUNIT_TEST(testGenus1Mesh);
+    CPPUNIT_TEST(testGenus2Mesh);
     CPPUNIT_TEST_SUITE_END();
 
 private:
@@ -44,6 +49,16 @@ public:
     void testFailsBadOrientationMesh();
 
     void testFailsNon2ManifoldMesh();
+
+    void testFailsDanglingVertexMesh();
+
+    void testFailsInvalidVertexMesh();
+
+    void testGenus0Mesh();
+
+    void testGenus1Mesh();
+
+    void testGenus2Mesh();
 };
 
 #endif /* !TILER_TEST_MESH_H */
