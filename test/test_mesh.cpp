@@ -22,7 +22,7 @@ void TestMesh::tearDown()
 
 void TestMesh::testMeshing()
 {
-    mesh->readSTL("../meshes/bunny.stl");
+    mesh->readSTL("../../test/meshes/bunny.stl");
     CPPUNIT_ASSERT(mesh->basicValidity());
     CPPUNIT_ASSERT(!mesh->manifoldValidity()); // bunny has known holes in the bottom
 }

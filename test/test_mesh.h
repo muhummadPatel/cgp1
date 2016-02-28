@@ -4,7 +4,10 @@
 
 #include <string>
 #include <cppunit/extensions/HelperMacros.h>
+
+#define private public
 #include "tesselate/mesh.h"
+#undef private
 
 /// Test code for @ref Mesh
 class TestMesh : public CppUnit::TestFixture
@@ -24,9 +27,9 @@ public:
     /// Tidying up after unit tests
     void tearDown();
 
-    /** 
+    /**
      * Run standard validity tests on bunny mesh
-     * @pre bunny.stl must be located in the project root directory
+     * @pre bunny.stl must be located in the <project_root>/test/meshes directory
      */
     void testMeshing();
 };
