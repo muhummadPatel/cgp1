@@ -462,6 +462,7 @@ void Mesh::insertEdge(Edge& edge){
 
 bool Mesh::basicValidity()
 {
+    edges.clear();
     cerr << "basicValidity:" << endl;
 
     for(int i = 0; i < tris.size(); i++){
