@@ -454,11 +454,14 @@ bool Mesh::writeSTL(string filename)
 }
 
 void Mesh::insertEdge(Edge& edge){
+    // Get the vertices in this edge in ascending order
     std::vector<int> edge_verts = {std::begin(edge.v), std::end(edge.v)};
     std::sort(edge_verts.begin(), edge_verts.end());
 
+    // Generate the key pair for this edge
     std::pair<int, int> index(edge_verts[0], edge_verts[1]);
 
+    // Push the edge into the correct bucket in the edge map
     edges[index].push_back(edge);
 }
 
@@ -467,7 +470,9 @@ bool Mesh::basicValidity()
     edges.clear();
     cerr << "\nbasicValidity:________________________" << endl;
 
+    // Loop through all the triangles
     for(int i = 0; i < tris.size(); i++){
+        // Check if all the vertex indices in this triangle are valid vertex indices
         std::vector<int> tri_verts = {std::begin(tris[i].v), std::end(tris[i].v)};
         for(int v = 0; v < tri_verts.size(); v++){
             if(tri_verts[v] >= verts.size() || tri_verts[v] < 0){
@@ -476,6 +481,7 @@ bool Mesh::basicValidity()
             }
         }
 
+        // Insert all the edges from this triangle into the edge list
         Edge e1 = {{tri_verts[0], tri_verts[1]}, tris[i]};
         Edge e2 = {{tri_verts[1], tri_verts[2]}, tris[i]};
         Edge e3 = {{tri_verts[2], tri_verts[0]}, tris[i]};
@@ -486,6 +492,7 @@ bool Mesh::basicValidity()
     }
     cerr << "All vertex indices within bounds: True" << endl;
 
+    // Compute Euler's characteristic for this mesh and report it to the user
     uint V = verts.size();
     uint E = edges.size();
     uint F = tris.size();
@@ -497,15 +504,17 @@ bool Mesh::basicValidity()
     cerr << "Should be eq to 2 - 2G ____________T" << endl;
     cerr << "Expected genus of loaded mesh: " << (1 - (eulers_char/2.0)) << endl;
 
-    //TODO: never actually get dangling verts?
+    // Check for dangling vertices
     std::vector<bool> verts_used(verts.size(), false);
     for(uint i = 0; i < tris.size(); i++){
         std::vector<int> tri_verts(std::begin(tris[i].v), std::end(tris[i].v));
 
+        // Mark all the vertices in this triangle as used (not dangling)
         for(uint j = 0; j < tri_verts.size(); j++){
             verts_used[tri_verts[j]] = true;
         }
     }
+    // Count all unused (dangling) vertices in the mesh and report them to the user
     int dangling_verts = std::count(verts_used.begin(), verts_used.end(), false);
     if(dangling_verts > 0){
         cerr << "No dangling vertices: False" << endl;
@@ -513,36 +522,43 @@ bool Mesh::basicValidity()
     }
     cerr << "No dangling vertices: True" << endl;
 
+    // If we reach this point without returning false, the mesh passes basicValidity
     return true;
 }
+
 
 bool Mesh::areOppositeEdges(Edge& edge1, Edge& edge2){
     return (edge1.v[0] == edge2.v[1] && edge1.v[1] == edge2.v[0]);
 }
 
 std::pair<int, int> Mesh::getNextEdge(std::pair<int, int> curr, std::vector<std::pair<int, int>>& adjacent_edges, std::vector<Triangle>& visited){
+    // Get the triangle we are about to walk across and mark it as visited
     Triangle tri = edges[curr][0].adjacent_tri;
-
     if(std::find(visited.begin(), visited.end(), tri) != visited.end()){
+        // Make sure we arent walking back where we came from
         tri = edges[curr][1].adjacent_tri;
     }
-
     visited.push_back(tri);
 
+    // Generate the edges in this triangle. The next edge is whichever of these is
+    // also in the adjacent_edges list.
     std::vector<std::pair<int, int>> tri_edges;
     tri_edges.push_back(std::make_pair(min(tri.v[0], tri.v[1]), max(tri.v[0], tri.v[1])));
     tri_edges.push_back(std::make_pair(min(tri.v[1], tri.v[2]), max(tri.v[1], tri.v[2])));
     tri_edges.push_back(std::make_pair(min(tri.v[2], tri.v[0]), max(tri.v[2], tri.v[0])));
 
-    //get rid of the current edge
+    // Get rid of the current edge because we've already visited it.
     tri_edges.erase(std::remove(tri_edges.begin(), tri_edges.end(), curr), tri_edges.end());
 
+    // Find and return whichever of the current triangle's edges we can find in the
+    // adjacent_edges list. This is the next edge in our march around the vertex.
     if(std::find(adjacent_edges.begin(), adjacent_edges.end(), tri_edges[0]) != adjacent_edges.end()){
         return tri_edges[0];
     }else if(std::find(adjacent_edges.begin(), adjacent_edges.end(), tri_edges[1]) != adjacent_edges.end()){
         return tri_edges[1];
     }
 
+    // We couldn't find the next edge, so return an invalid edge index.
     return std::make_pair(-1, -1);
 }
 
@@ -550,44 +566,46 @@ bool Mesh::manifoldValidity()
 {
     cerr << "\nmanifoldValidity:________________________" << endl;
 
-    //To keep track of which edges are adjacent to each vertex
+    // To keep track of which edges are adjacent to each vertex
     std::vector<std::vector<std::pair<int, int>>> edges_at_vertex(verts.size());
 
-    //looping over the edges
+    // Loop over the edges
     for(auto it = edges.begin(); it != edges.end(); it++){
         std::pair<int, int> index = it->first;
         std::vector<Edge> evec = it->second;
 
-        //check that every edge has 2 triangles associated with it (Closed mesh)
+        // Check that every edge has 2 triangles associated with it (Closed mesh)
         if(evec.size() != 2){
             cerr << "Every edge has only 2 adjacent triangles: False" << endl;
             return false;
         }
 
-        //check orientation/consistent winding. Every pair of edges runs opposite to each other.
+        // Check orientation/consistent winding. Every pair of edges runs opposite to each other.
         if(!areOppositeEdges(evec[0], evec[1])){
             cerr << "Consistent orientation: False" << endl;
             return false;
         }
 
-        //put this edge into the edges_at_vertex vector
+        // Put this edge into the edges_at_vertex vector
         edges_at_vertex[index.first].push_back(index);
         edges_at_vertex[index.second].push_back(index);
     }
     cerr << "Every edge has only 2 adjacent triangles: True" << endl;
     cerr << "Consistent orientation: True" << endl;
 
-    //for each vertex
+    // For each vertex
     for(int i = 0; i < verts.size(); i++){
-        //get the edges adjacent to that vertex
+        // Get the edges adjacent to that vertex
         std::vector<std::pair<int, int>> adjacent_edges = edges_at_vertex[i];
 
-        std::vector<Triangle> visited; //keep track of the triangles we visited
+        std::vector<Triangle> visited; // Keep track of the triangles we visited
 
+        // Try to march around the vertex from edge to edge
         std::pair<int, int> start = adjacent_edges[0];
         std::pair<int, int> curr = getNextEdge(start, adjacent_edges, visited);
         while(curr != start && !adjacent_edges.empty()){
             if(curr.first == -1 && curr.second == -1){
+                // We couldn't find a valid next edge to march to
                 cerr << "Every vertex has closed ring of triangles around it: False" << endl;
                 return false;
             }
@@ -596,12 +614,15 @@ bool Mesh::manifoldValidity()
             curr = getNextEdge(curr, adjacent_edges, visited);
         }
 
-        if(curr != start || visited.size() != edges_at_vertex[i].size() ){
+        // If we didn't end up where we started, or we didn't visit all the triangles around that vertex,
+        // then there was no closed ring of triangles around that vertex. (non 2-manifold)
+        if(curr != start || visited.size() != edges_at_vertex[i].size()){
             cerr << "Every vertex has closed ring of triangles around it: False" << endl;
             return false;
         }
     }
     cerr << "Every vertex has closed ring of triangles around it: True" << endl;
 
+    // If we reach this point without returning false, then the mesh passes manifoldValidity
     return true;
 }

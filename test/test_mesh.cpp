@@ -55,40 +55,44 @@ void TestMesh::testFailsNon2ManifoldMesh(){
 }
 
 void TestMesh::testFailsDanglingVertexMesh(){
+    // Load a known valid mesh
     mesh->readSTL("../../test/meshes/cube_valid.stl");
 
-    //now add a dangling vertex to the verts vector
+    // Add a dangling vertex to the verts vector
     cgp::Point dangling_vert = cgp::Point();
     mesh->verts.push_back(dangling_vert);
 
+    // Should now fail basic validity because of the dangling vert
     CPPUNIT_ASSERT(!mesh->basicValidity());
 }
 
 void TestMesh::testFailsInvalidVertexMesh(){
+    // Load a known valid mesh
     mesh->readSTL("../../test/meshes/cube_valid.stl");
 
-    //now change one of the vertices in a triangle to be invalid(> verts.size())
+    // Change one of the vertices in a triangle to be invalid(> verts.size())
     mesh->tris[0].v[0] = mesh->verts.size() + 5;
-
+    //Should now fail basci validity because of the invalid vertex index
     CPPUNIT_ASSERT(!mesh->basicValidity());
 
-    //now change one of the vertices in a triangle to be invalid(< 0)
+    // Same as above, but with -ve invalid vertex index
     mesh->tris[0].v[0] = -5;
-
     CPPUNIT_ASSERT(!mesh->basicValidity());
 }
 
 void TestMesh::testGenus0Mesh(){
     mesh->readSTL("../../test/meshes/cube_valid.stl");
 
+    // Redirect cerr to stringstream so we can inspect it
     std::ostringstream oss;
     std::streambuf* orig_buf(cerr.rdbuf(oss.rdbuf()));
-    mesh->basicValidity();
-    cerr.rdbuf(orig_buf);
+    mesh->basicValidity(); // Run the validity check so we can capture the output
+    cerr.rdbuf(orig_buf); // Reset cerr to print to the screen
 
     const string output = oss.str();
-    cerr << output;
+    cerr << output; // Show the user the captured output
 
+    // Regex magic to extract the genus reported to the user (I LOOOOVEE REGEX XD)
     std::regex regex("Expected genus of loaded mesh: (\\d+)\\s");
     std::smatch match;
     if (std::regex_search(output.begin(), output.end(), match, regex)){
@@ -102,14 +106,16 @@ void TestMesh::testGenus0Mesh(){
 void TestMesh::testGenus1Mesh(){
     mesh->readSTL("../../test/meshes/torus_genus1.stl");
 
+    // Redirect cerr to stringstream so we can inspect it
     std::ostringstream oss;
     std::streambuf* orig_buf(cerr.rdbuf(oss.rdbuf()));
-    mesh->basicValidity();
-    cerr.rdbuf(orig_buf);
+    mesh->basicValidity(); // Run the validity check so we can capture the output
+    cerr.rdbuf(orig_buf); // Reset cerr to print to the screen
 
     const string output = oss.str();
-    cerr << output;
+    cerr << output; // Show the user the captured output
 
+    // Extract the reported genus and check that it matches the expected value
     std::regex regex("Expected genus of loaded mesh: (\\d+)\\s");
     std::smatch match;
     if (std::regex_search(output.begin(), output.end(), match, regex)){
@@ -123,14 +129,16 @@ void TestMesh::testGenus1Mesh(){
 void TestMesh::testGenus2Mesh(){
     mesh->readSTL("../../test/meshes/double_torus_genus2.stl");
 
+    // Redirect cerr to stringstream so we can inspect it
     std::ostringstream oss;
     std::streambuf* orig_buf(cerr.rdbuf(oss.rdbuf()));
-    mesh->basicValidity();
-    cerr.rdbuf(orig_buf);
+    mesh->basicValidity(); // Run the validity check so we can capture the output
+    cerr.rdbuf(orig_buf); // Reset cerr to print to the screen
 
     const string output = oss.str();
-    cerr << output;
+    cerr << output; // Show the user the captured output
 
+    // Extract the reported genus and check that it matches the expected value
     std::regex regex("Expected genus of loaded mesh: (\\d+)\\s");
     std::smatch match;
     if (std::regex_search(output.begin(), output.end(), match, regex)){

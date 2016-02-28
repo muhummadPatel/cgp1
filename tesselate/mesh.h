@@ -28,17 +28,12 @@ struct Triangle
     cgp::Vector n;   ///< outward facing unit normal to the triangle
 };
 
+// To allow for checking equality of triangles.
 inline bool operator==(const Triangle& lhs, const Triangle& rhs)
 {
     bool vertsEqual = lhs.v[0] == rhs.v[0] && lhs.v[1] == rhs.v[1] &&lhs.v[2] == rhs.v[2];
-    bool normalEqual = true;//lhs.n == rhs.n;
+    bool normalEqual = true;
     return vertsEqual && normalEqual;
-}
-
-inline std::ostream & operator<<(std::ostream & Str, Triangle const & v) {
-  // print something from v to str, e.g: Str << v.getX();
-  Str << "Triangle: <" << v.v[0] << ", " << v.v[1] << ", " << v.v[2] << ">";
-  return Str;
 }
 
 /**
@@ -49,12 +44,6 @@ struct Edge
     int v[2];   ///< indices into the vertex list for edge endpoints
     Triangle adjacent_tri;
 };
-
-inline std::ostream & operator<<(std::ostream & Str, Edge const & v) {
-  // print something from v to str, e.g: Str << v.getX();
-  Str << "Edge: [<" << v.v[0] << ", " << v.v[1] << ">, " << v.adjacent_tri << "]";
-  return Str;
-}
 
 /**
  * A sphere in 3D space, consisting of a center and radius. Used for bounding sphere hierarchy acceleration.
@@ -134,8 +123,39 @@ private:
      */
     void buildTransform(glm::mat4x4 &tfm);
 
+    /**
+     * Inserts an edge into the edge list. The edge list maps from a pair<int, int>
+     * to a vector<Edge>. The pair is made up of the two vertices that make up that
+     * edge sorted in ascending order. The vector stores all the instances of that edge
+     * in the mesh (e.g. there would be two entries in the vector if the edge is
+     * adjacent to 2 triangles).
+     * @param edge  The edge to be inserted into the edge list.
+     */
     void insertEdge(Edge& edge);
+
+    /**
+     * Checks if the given 2 edges are opposites/the same edge. Two edges are opposite
+     * if they consist of the same vertices but in reverse order. For example, this would
+     * be the case when two triangles share the same edge.
+     * @param edge1 The first edge to check
+     * @param edge2 The second edge to check
+     * @retval true if edge1 and edge2 are the same edge in opposite directions
+     * @retval false otherwise
+     */
     bool areOppositeEdges(Edge& edge1, Edge& edge2);
+
+    /**
+     * Gets the next edge in the adjacent_edges vector. This is the method used to
+     * march along the faces around a vertex when checking if the mesh obeys the 2-manifold
+     * property. It looks at the current edge and finds the next edge around the vertex
+     * to allow us to move around the vertex. It also updates the visited vector to keep track
+     * of which faces we have already visited.
+     * @param curr the current edge we are looking at
+     * @param adjacent_edges the list of edges around the vertex. The next edge is somewhere in this list.
+     * @param visited This is the list of triangles/faces we have already visited. We need to update this and make sure we aren't moving backwards.
+     * @retval The next edge on our march around the vertex if we can find one.
+     * @retval pair(-1, -1) if we cannot find a valid edge to move to next.
+     */
     std::pair<int, int> getNextEdge(std::pair<int, int> curr, std::vector<std::pair<int, int>>& adjacent_edges, std::vector<Triangle>& visited);
 
 public:
