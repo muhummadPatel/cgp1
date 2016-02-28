@@ -134,7 +134,6 @@ private:
      */
     void buildTransform(glm::mat4x4 &tfm);
 
-    void edgePrintHelper(std::pair<int, int>& index, std::vector<Edge>& evec);
     void insertEdge(Edge& edge);
     bool areOppositeEdges(Edge& edge1, Edge& edge2);
     std::pair<int, int> getNextEdge(std::pair<int, int> curr, std::vector<std::pair<int, int>>& adjacent_edges, std::vector<Triangle>& visited);

@@ -389,15 +389,17 @@ bool Mesh::readSTL(string filename)
         mergeVerts();
         // normal vectors at vertices are needed for rendering so derive from incident faces
         deriveVertNorms();
-        if(basicValidity())
-            cerr << "loaded file has basic validity" << endl;
-        else
-            cerr << "loaded file does not pass basic validity" << endl;
+        if(basicValidity()){
+            cerr << "========== basic validity: Pass ==========\n" << endl;
 
-        if(manifoldValidity())
-            cerr << "loaded file has manifold validity" << endl;
-        else
-            cerr << "loaded file does not pass manifold validity" << endl;
+            if(manifoldValidity()){
+                cerr << "========== manifold validity: Pass ==========\n" << endl;
+            }else{
+                cerr << "========== manifold validity: Fail ==========\n" << endl;
+            }
+        }else{
+            cerr << "========== basic validity: Fail ==========\n" << endl;
+        }
     }
     else
     {
@@ -463,13 +465,13 @@ void Mesh::insertEdge(Edge& edge){
 bool Mesh::basicValidity()
 {
     edges.clear();
-    cerr << "basicValidity:" << endl;
+    cerr << "\nbasicValidity:________________________" << endl;
 
     for(int i = 0; i < tris.size(); i++){
         std::vector<int> tri_verts = {std::begin(tris[i].v), std::end(tris[i].v)};
         for(int v = 0; v < tri_verts.size(); v++){
-            if(v >= verts.size()){
-                cerr << "Reference to out-of-bounds vertex found." << endl;
+            if(tri_verts[v] >= verts.size() || tri_verts[v] < 0){
+                cerr << "All vertex indices within bounds: False" << endl;
                 return false;
             }
         }
@@ -482,7 +484,7 @@ bool Mesh::basicValidity()
         insertEdge(e2);
         insertEdge(e3);
     }
-    cerr << "edges.size() = " << edges.size() << endl;
+    cerr << "All vertex indices within bounds: True" << endl;
 
     uint V = verts.size();
     uint E = edges.size();
@@ -493,6 +495,7 @@ bool Mesh::basicValidity()
     cerr << "F = " << F << endl;
     cerr << "Eulers characteristic: V - E + F = " << eulers_char << endl;
     cerr << "Should be eq to 2 - 2G ____________T" << endl;
+    cerr << "Expected genus of loaded mesh: " << (1 - (eulers_char/2.0)) << endl;
 
     //TODO: never actually get dangling verts?
     std::vector<bool> verts_used(verts.size(), false);
@@ -504,21 +507,13 @@ bool Mesh::basicValidity()
         }
     }
     int dangling_verts = std::count(verts_used.begin(), verts_used.end(), false);
-    cerr << "Dangling vertices: " << dangling_verts << endl;
     if(dangling_verts > 0){
+        cerr << "No dangling vertices: False" << endl;
         return false;
     }
+    cerr << "No dangling vertices: True" << endl;
 
     return true;
-}
-
-
-void Mesh::edgePrintHelper(std::pair<int, int>& index, std::vector<Edge>& evec){
-    cerr << "<" << index.first << ", " << index.second << "> : " << endl;
-    for(auto e: evec){
-        cerr << e << endl;
-    }
-    cerr << endl;
 }
 
 bool Mesh::areOppositeEdges(Edge& edge1, Edge& edge2){
@@ -553,6 +548,8 @@ std::pair<int, int> Mesh::getNextEdge(std::pair<int, int> curr, std::vector<std:
 
 bool Mesh::manifoldValidity()
 {
+    cerr << "\nmanifoldValidity:________________________" << endl;
+
     //To keep track of which edges are adjacent to each vertex
     std::vector<std::vector<std::pair<int, int>>> edges_at_vertex(verts.size());
 
@@ -563,13 +560,13 @@ bool Mesh::manifoldValidity()
 
         //check that every edge has 2 triangles associated with it (Closed mesh)
         if(evec.size() != 2){
-            cerr << "There are some edges with incident_triangles != 2." << endl;
+            cerr << "Every edge has only 2 adjacent triangles: False" << endl;
             return false;
         }
 
         //check orientation/consistent winding. Every pair of edges runs opposite to each other.
         if(!areOppositeEdges(evec[0], evec[1])){
-            cerr << "Orientation error. Check the normals of your model." << endl;
+            cerr << "Consistent orientation: False" << endl;
             return false;
         }
 
@@ -577,6 +574,8 @@ bool Mesh::manifoldValidity()
         edges_at_vertex[index.first].push_back(index);
         edges_at_vertex[index.second].push_back(index);
     }
+    cerr << "Every edge has only 2 adjacent triangles: True" << endl;
+    cerr << "Consistent orientation: True" << endl;
 
     //for each vertex
     for(int i = 0; i < verts.size(); i++){
@@ -589,7 +588,7 @@ bool Mesh::manifoldValidity()
         std::pair<int, int> curr = getNextEdge(start, adjacent_edges, visited);
         while(curr != start && !adjacent_edges.empty()){
             if(curr.first == -1 && curr.second == -1){
-                cerr << "No closed ring. Not a 2 manifold mesh." << endl;
+                cerr << "Every vertex has closed ring of triangles around it: False" << endl;
                 return false;
             }
 
@@ -598,10 +597,11 @@ bool Mesh::manifoldValidity()
         }
 
         if(curr != start || visited.size() != edges_at_vertex[i].size() ){
-            cerr << "Mesh does not obey 2 manifold property" << endl;
+            cerr << "Every vertex has closed ring of triangles around it: False" << endl;
             return false;
         }
     }
+    cerr << "Every vertex has closed ring of triangles around it: True" << endl;
 
     return true;
 }
